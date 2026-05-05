@@ -27,6 +27,7 @@ This application allows the user to add simple tasks to a to-do list.
 Once running, the application will display a menu in the console:
 
 ===== TO-DO LIST =====
+
 Here is your menu options:
 1. Add a task
 2. View tasks

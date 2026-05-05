@@ -12,15 +12,6 @@ The workspace contains two folders by default, where:
 - `src`: the folder to maintain sources
 - `doc`: the folder to maintain documentation related to my project (UML diagram, etc)
 
-### File Breakdown
-ToDoListApp/
-│
-├── src/
-│   ├── App.java               # Task class (model) — defines task properties
-│   └── ToDoList.java          x# Core logic — manages the ArrayList of tasks
-│
-├── README.md                   # Project documentation
-
 This projects teaches the basics of Swing 
 
 ## How to use the application

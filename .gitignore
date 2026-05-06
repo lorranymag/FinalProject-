@@ -1,8 +1,4 @@
 *.class
-*.html
-*.js
-*.css
-*.svg
 bin/
 build/
 doc/

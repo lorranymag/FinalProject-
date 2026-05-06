@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>To-Do List – Java 254</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0e0e12;
+      --surface:   #17171e;
+      --card:      #1e1e28;
+      --border:    #2e2e3e;
+      --accent:    #7c6cfa;
+      --accent2:   #fa6c9f;
+      --text:      #e8e8f0;
+      --muted:     #7a7a96;
+      --done-bg:   #1a2a1e;
+      --done-text: #4caf76;
+      --radius:    14px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px 80px;
+    }
+
+    /* background grain */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0;
+    }
+
+    .wrapper { position: relative; z-index: 1; width: 100%; max-width: 560px; }
+
+    /* ── Header ── */
+    header { margin-bottom: 36px; }
+    .tag {
+      display: inline-block;
+      font-family: 'Syne', sans-serif;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: .15em; text-transform: uppercase;
+      color: var(--accent); border: 1px solid var(--accent);
+      padding: 4px 10px; border-radius: 99px;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 8vw, 3rem);
+      font-weight: 800; line-height: 1.05;
+      background: linear-gradient(135deg, var(--text) 40%, var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .subtitle { color: var(--muted); font-size: .92rem; margin-top: 8px; font-weight: 300; }
+
+    /* ── Stats bar ── */
+    .stats {
+      display: flex; gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat {
+      flex: 1; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem; font-weight: 800;
+    }
+    .stat-num.accent  { color: var(--accent); }
+    .stat-num.accent2 { color: var(--accent2); }
+    .stat-num.done    { color: var(--done-text); }
+    .stat-label { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+
+    /* progress */
+    .progress-wrap { margin-bottom: 28px; }
+    .progress-label {
+      display: flex; justify-content: space-between;
+      font-size: .78rem; color: var(--muted); margin-bottom: 6px;
+    }
+    .progress-bar {
+      height: 6px; background: var(--border); border-radius: 99px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 99px;
+      transition: width .5s cubic-bezier(.4,0,.2,1);
+      width: 0%;
+    }
+
+    /* ── Input area ── */
+    .input-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+      margin-bottom: 24px;
+    }
+    .input-row { display: flex; gap: 10px; }
+    input[type="text"] {
+      flex: 1; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: .95rem; padding: 12px 16px;
+      outline: none; transition: border-color .2s;
+    }
+    input[type="text"]:focus { border-color: var(--accent); }
+    input[type="text"]::placeholder { color: var(--muted); }
+
+    .btn-add {
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 10px;
+      padding: 12px 22px; font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: .9rem; cursor: pointer;
+      transition: opacity .2s, transform .1s;
+      white-space: nowrap;
+    }
+    .btn-add:hover { opacity: .85; }
+    .btn-add:active { transform: scale(.97); }
+
+    /* filter row */
+    .filter-row {
+      display: flex; gap: 8px;
+      margin-top: 14px;
+    }
+    .filter-btn {
+      flex: 1; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); font-family: 'DM Sans', sans-serif;
+      font-size: .8rem; padding: 7px 10px;
+      cursor: pointer; transition: all .2s;
+    }
+    .filter-btn.active {
+      background: var(--accent); color: #fff; border-color: var(--accent);
+    }
+
+    /* ── Task list ── */
+    #task-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .task-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 18px;
+      display: flex; align-items: center; gap: 14px;
+      transition: border-color .2s, opacity .3s;
+      animation: slideIn .25s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .task-item:hover { border-color: var(--accent); }
+    .task-item.completed { background: var(--done-bg); border-color: #2a3e2e; opacity: .75; }
+
+    /* custom checkbox */
+    .check-btn {
+      width: 24px; height: 24px; flex-shrink: 0;
+      border-radius: 50%; border: 2px solid var(--border);
+      background: transparent; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s; color: transparent; font-size: 13px;
+    }
+    .check-btn:hover { border-color: var(--done-text); }
+    .task-item.completed .check-btn {
+      background: var(--done-text); border-color: var(--done-text); color: #fff;
+    }
+
+    .task-text {
+      flex: 1; font-size: .95rem; line-height: 1.4;
+      transition: color .2s;
+    }
+    .task-item.completed .task-text {
+      text-decoration: line-through; color: var(--muted);
+    }
+
+    .task-num {
+      font-family: 'Syne', sans-serif; font-size: .72rem;
+      color: var(--muted); font-weight: 700;
+    }
+
+    .del-btn {
+      background: transparent; border: none;
+      color: var(--muted); font-size: 1.1rem;
+      cursor: pointer; padding: 4px; border-radius: 6px;
+      transition: color .2s, background .2s; line-height: 1;
+    }
+    .del-btn:hover { color: var(--accent2); background: #2e1e28; }
+
+    /* empty state */
+    .empty {
+      text-align: center; padding: 48px 20px;
+      color: var(--muted); font-size: .9rem;
+    }
+    .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+    /* toast */
+    #toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--accent); color: #fff;
+      font-family: 'Syne', sans-serif; font-size: .85rem; font-weight: 600;
+      padding: 10px 22px; border-radius: 99px;
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s, transform .3s;
+      z-index: 99;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="tag">Java 254 · Final Project</div>
+    <h1>My To&#8209;Do List</h1>
+    <p class="subtitle">By Lorrany Evangelista &amp; Elayne Vilela</p>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num accent" id="stat-total">0</div>
+      <div class="stat-label">Total tasks</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num done" id="stat-done">0</div>
+      <div class="stat-label">Completed</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num accent2" id="stat-left">0</div>
+      <div class="stat-label">Remaining</div>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Progress</span>
+      <span id="pct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <div class="input-row">
+      <input type="text" id="task-input" placeholder="Enter a new task…" />
+      <button class="btn-add" onclick="addTask()">+ Add</button>
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+      <button class="filter-btn" onclick="setFilter('active', this)">Active</button>
+      <button class="filter-btn" onclick="setFilter('completed', this)">Completed</button>
+    </div>
+  </div>
+
+  <!-- List -->
+  <div id="task-list"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+  let filter = 'all';
+
+  function save() { localStorage.setItem('tasks', JSON.stringify(tasks)); }
+
+  function addTask() {
+    const input = document.getElementById('task-input');
+    const text = input.value.trim();
+    if (!text) { showToast('Please enter a task!'); return; }
+    tasks.push({ text, completed: false });
+    input.value = '';
+    save(); render();
+    showToast('Task added ✓');
+  }
+
+  function toggleTask(i) {
+    tasks[i].completed = !tasks[i].completed;
+    save(); render();
+    if (tasks[i].completed) showToast('Task completed ✔');
+  }
+
+  function deleteTask(i) {
+    tasks.splice(i, 1);
+    save(); render();
+    showToast('Task removed');
+  }
+
+  function setFilter(f, btn) {
+    filter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  function render() {
+    const list = document.getElementById('task-list');
+    const total = tasks.length;
+    const done  = tasks.filter(t => t.completed).length;
+    const left  = total - done;
+    const pct   = total ? Math.round(done / total * 100) : 0;
+
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-done').textContent  = done;
+    document.getElementById('stat-left').textContent  = left;
+    document.getElementById('pct').textContent        = pct + '%';
+    document.getElementById('progress-fill').style.width = pct + '%';
+
+    const visible = tasks
+      .map((t, i) => ({ ...t, i }))
+      .filter(t => filter === 'all' || (filter === 'completed' ? t.completed : !t.completed));
+
+    if (!visible.length) {
+      list.innerHTML = `<div class="empty">
+        <div class="empty-icon">${filter === 'completed' ? '🎉' : '📋'}</div>
+        <div>${filter === 'completed' ? 'No completed tasks yet.' : filter === 'active' ? 'All tasks done!' : 'No tasks yet. Add one above!'}</div>
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = visible.map((t, pos) => `
+      <div class="task-item ${t.completed ? 'completed' : ''}">
+        <button class="check-btn" onclick="toggleTask(${t.i})" title="Mark complete">✓</button>
+        <span class="task-text">${escHtml(t.text)}</span>
+        <span class="task-num">#${pos + 1}</span>
+        <button class="del-btn" onclick="deleteTask(${t.i})" title="Delete">✕</button>
+      </div>`).join('');
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  // Enter key support
+  document.getElementById('task-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTask();
+  });
+
+  render();
+</script>
+</body>
+</html>

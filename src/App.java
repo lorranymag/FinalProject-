@@ -7,57 +7,48 @@ import javax.swing.JTextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+public class App {
 
+    public static void main(String[] args) throws Exception {
+        JFrame mainFrame = new JFrame();
+        mainFrame.setTitle("Welcome");
+        mainFrame.setSize(400, 300);
+        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.setLayout(new GridLayout(3, 1, 10, 10));
 
-    public class App extends JFrame {
+        JPanel topPanel = new JPanel();
+        final JLabel lbFirstName = new JLabel("Enter your first name:");
+        topPanel.add(lbFirstName);
+        mainFrame.add(topPanel);
 
-        public static void main (String [] args) throws Exception {
-            JFrame mainFrame = new JFrame();
-            mainFrame.setTitle ("Welcome");
-            mainFrame.setSize(400,300);
-            mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            mainFrame.setLayout(new GridLayout (3, 1, 10, 10));
+        JPanel centralPanel = new JPanel();
+        final JTextField tfFirstName = new JTextField(10);
+        centralPanel.add(tfFirstName);
+        mainFrame.add(centralPanel);
 
-            JPanel topPanel = new JPanel();
-            JLabel lbFirstName = new JLabel ("Enter your fisrt name:");
-            topPanel.add(lbFirstName);
-            mainFrame.add(topPanel);
+        final JTextField tfAge = new JTextField(10);
+        centralPanel.add(tfAge);
 
-            JPanel centralPanel = new JPanel();
-            JTextField tfFirstName = new JTextField(10);
-            centralPanel.add(tfFirstName);
-            mainFrame.add(centralPanel);
+        JPanel bottomPanel = new JPanel();
+        JButton okButton = new JButton("OK");
+        bottomPanel.add(okButton);
+        mainFrame.add(bottomPanel);
 
-            JTextField tfAge = new JTextField (10);
-            centralPanel.add(tfAge);
-
-
-            JPanel bottomPanel = new JPanel();
-            JButton okButton = new JButton("OK");
-            bottomPanel.add(okButton);
-            mainFrame.add(bottomPanel);
-
-            okButton.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-                String firstName = tfFirstName.getText(); // gets the text from the TextField component
-                lbFirstName.setText("Hello " + firstName); // updates the message on the label
-                String sAge = tfFirstName.getText();
+        okButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String firstName = tfFirstName.getText();
+                String sAge = tfAge.getText(); // ✅ fixed: reads from age field
 
                 try {
-                     int age = Integer.parseInt(sAge); //convert the string to an int
+                    int age = Integer.parseInt(sAge);
+                    lbFirstName.setText("Hello " + firstName + ", age " + age); // ✅ actually uses age
+                } catch (Exception except) {
+                    lbFirstName.setText("Hello " + firstName + " (invalid age)");
                 }
+            }
+        });
 
-                catch(Exception execpt){
-
-
-                }
-               
-   }
-});
-
-
-
-            mainFrame.setVisible(true); //last statment
-        }
+        mainFrame.setVisible(true);
     }
+}
